@@ -4,8 +4,8 @@ import axios from 'axios';
 import { API_END_POINT } from '../utils/constants';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setUser } from '../redux/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setLoading, setUser } from '../redux/userSlice';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(false);
@@ -14,11 +14,13 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isLoading = useSelector((store) => store.app.isLoading);
 
   const loginHandler = () => {
     setIsLogin(!isLogin);
   };
   const getInputData = async (e) => {
+    dispatch(setLoading(true));
     e.preventDefault();
     if (isLogin) {
       const user = { email, password };
@@ -29,7 +31,7 @@ const Login = () => {
           },
           withCredentials: true,
         });
-        console.log(res);
+
         if (res.data.success) {
           toast.success(res.data.message);
         }
@@ -38,10 +40,14 @@ const Login = () => {
       } catch (error) {
         toast.error(error.response.data.message);
         console.log(error);
+      } finally {
+        dispatch(setLoading(false));
       }
     } else {
+      dispatch(setLoading(true));
+
       const user = { fullName, email, password };
-      console.log(user);
+
       try {
         const res = await axios.post(`${API_END_POINT}/register`, user, {
           headers: {
@@ -49,7 +55,7 @@ const Login = () => {
           },
           withCredentials: true,
         });
-        console.log(res);
+
         if (res.data.success) {
           toast.success(res.data.message);
         }
@@ -57,6 +63,8 @@ const Login = () => {
       } catch (error) {
         toast.error(error.response.data.message);
         console.log(error);
+      } finally {
+        dispatch(setLoading(false));
       }
     }
 
@@ -107,7 +115,7 @@ const Login = () => {
             className='outline-none p-3 my-3 rounded-sm bg-gray-700 text-white'
           />
           <button className='bg-red-600 mt-6 p-3 text-white rounded-sm'>
-            {isLogin ? 'Login' : 'Sign In'}
+            {`${isLoading ? 'loading...' : isLogin ? 'Login' : 'Sign Up'}`}
           </button>
           <p className='text-white mt-3'>
             {isLogin ? 'New to netflix?' : 'Already have an account'}
